@@ -1,68 +1,92 @@
-from flask import Flask, request, jsonify, make_response
+import time
+from flask import Flask, render_template, flash, redirect, request, url_for, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
-import os
-from dotenv import load_dotenv
-import click
-from flask.cli import with_appcontext
-from flask_migrate import Migrate
 from datetime import datetime as dt
 
-load_dotenv()
-# This is a sample Python script.
 
+DBUSER = 'dass'
+DBPASS = 'foobarbaz'
+DBHOST = 'db'
+DBPORT = '5432'
+DBNAME = 'userdb'
 
-# Press Maj+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///students.sqlite3'
+app.config['SQLALCHEMY_DATABASE_URI'] = \
+    'postgresql+psycopg2://{user}:{passwd}@{host}:{port}/{db}'.format(
+        user=DBUSER,
+        passwd=DBPASS,
+        host=DBHOST,
+        port=DBPORT,
+        db=DBNAME)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# app.config['DEBUG'] = True
-app.secret_key = os.environ['SECRET_KEY']
-app.config["CORS_HEADERS"] = "Content-Type"
+app.secret_key = 'foobarbaz'
+
+
 db = SQLAlchemy(app)
 
 
-@click.command(name='create_tables')
-@with_appcontext
-def create_tables():
+
+class UserNetflix(db.Model):
+    __tablename__ = 'usernetflix'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nom = db.Column(db.String(50), nullable=False)
+    adresse = db.Column(db.String())
+    email = db.Column(db.String(120), unique=True)
+    pays = db.Column(db.String(120), unique=True)
+    status = db.Column(db.String(120), unique=True)
+    created_at = db.Column(db.DateTime,
+                           index=False,
+                           unique=False,
+                           nullable=False)
+
+    def __init__(self, nom, adresse, email, pays, status, created_at):
+        self.nom = nom
+        self.adresse = adresse
+        self.email = email
+        self.pays = pays
+        self.status = status
+        self.created_at = created_at
+
+    def __repr__(self):
+        return '<id {}>'.format(self.id)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'nom': self.nom,
+            'adresse': self.adresse,
+            'email': self.email,
+            'pays': self.pays,
+            'status': self.status,
+            'created_at': self.created_at
+
+        }
+
+def database_initialization_sequence():
     db.create_all()
-    print("create")
+    test_rec = UserNetflix(
+            'John Doe',
+            '123 Foobar Ave',
+            'mail@gmail.com',
+            'USA',
+            'Aticf',
+            dt.now()
+            )
 
-
-app.cli.add_command(create_tables)
-
-migrate = Migrate(app, db)
-from ressources.modules.models import *
-
-
-@app.teardown_request
-def checkin_db(exc):
-    try:
-        print("Removing db session.")
-        db.session.remove()
-    except AttributeError:
-        pass
-
-
-@app.route("/")
-def print_hi():
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, dass')  # Press Ctrl+F8 to toggle the breakpoint.
-    return "Hello Dass"
-
-
-# Press the green button in the gutter to run the script.
+    db.session.add(test_rec)
+    db.session.rollback()
+    db.session.commit()
 
 @app.route("/users", methods=['GET'])
 def getUsers():
     if request.method == "GET":
         users = UserNetflix.query.all()
-        print("count:", len(users))
         if not users:
-            return {}
+            return jsonify([])
         return jsonify([c.serialize() for c in users])
-
 
 @app.route("/users/add", methods=['POST'])
 def addUser():
@@ -161,6 +185,13 @@ def deleteUser(user_id):
         return make_response(jsonify({"status": "success"}), 204)
 
 if __name__ == '__main__':
-    app.run()
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    dbstatus = False
+    while dbstatus == False:
+        try:
+            db.create_all()
+        except:
+            time.sleep(2)
+        else:
+            dbstatus = True
+    database_initialization_sequence()
+    app.run(debug=True, host='0.0.0.0')
