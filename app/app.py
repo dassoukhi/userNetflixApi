@@ -35,11 +35,10 @@ class UserNetflix(db.Model):
     nom = db.Column(db.String(50), nullable=False)
     adresse = db.Column(db.String())
     email = db.Column(db.String(120), unique=True)
-    pays = db.Column(db.String(120), unique=True)
-    status = db.Column(db.String(120), unique=True)
+    pays = db.Column(db.String(120))
+    status = db.Column(db.String(120))
     created_at = db.Column(db.DateTime,
                            index=False,
-                           unique=False,
                            nullable=False)
 
     def __init__(self, nom, adresse, email, pays, status, created_at):
@@ -185,13 +184,18 @@ def deleteUser(user_id):
         return make_response(jsonify({"status": "success"}), 204)
 
 if __name__ == '__main__':
+    print("beginng")
     dbstatus = False
     while dbstatus == False:
+        print("in while")
         try:
             db.create_all()
         except:
-            time.sleep(2)
+            print("sleep 1")
+            time.sleep(1)
         else:
             dbstatus = True
+            print("statusDB 1")
     database_initialization_sequence()
+    print("init db")
     app.run(debug=True, host='0.0.0.0')
