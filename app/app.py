@@ -37,16 +37,18 @@ class UserNetflix(db.Model):
     email = db.Column(db.String(120), unique=True)
     pays = db.Column(db.String(120))
     status = db.Column(db.String(120))
+    role = db.Column(db.String(120))
     created_at = db.Column(db.DateTime,
                            index=False,
                            nullable=False)
 
-    def __init__(self, nom, adresse, email, pays, status, created_at):
+    def __init__(self, nom, adresse, email, pays, status, role, created_at):
         self.nom = nom
         self.adresse = adresse
         self.email = email
         self.pays = pays
         self.status = status
+        self.role = role    
         self.created_at = created_at
 
     def __repr__(self):
@@ -60,6 +62,7 @@ class UserNetflix(db.Model):
             'email': self.email,
             'pays': self.pays,
             'status': self.status,
+            'role': self.role,
             'created_at': self.created_at
 
         }
@@ -72,6 +75,7 @@ def database_initialization_sequence():
             'mail@gmail.com',
             'USA',
             'Aticf',
+            'client',
             dt.now()
             )
 
@@ -112,11 +116,14 @@ def addUser():
             if 'status' in request_data:
                 status = request_data['status']
 
+            if 'role' in request_data:
+                role = request_data['role']
+
             find = UserNetflix.query.filter_by(email=email).first()
             if find:
                 return jsonify(find.serialize())
 
-            user = UserNetflix(nom=nom, adresse=adresse, email=email, pays=pays, status=status, created_at=dt.now())
+            user = UserNetflix(nom=nom, adresse=adresse, email=email, pays=pays, status=status, role=role, created_at=dt.now())
             try:
                 db.session.add(user)
                 db.session.commit()
@@ -162,6 +169,11 @@ def editUser(user_id):
             if 'status' in request_data:
                 status = request_data['status']
                 user.status = status
+
+            if 'role' in request_data:
+                role = request_data['role']
+                user.role = role
+
             try:
                 db.session.commit()
                 return jsonify(user.serialize())
@@ -184,18 +196,13 @@ def deleteUser(user_id):
         return make_response(jsonify({"status": "success"}), 204)
 
 if __name__ == '__main__':
-    print("beginng")
     dbstatus = False
     while dbstatus == False:
-        print("in while")
         try:
             db.create_all()
         except:
-            print("sleep 1")
-            time.sleep(1)
+            time.sleep(2)
         else:
             dbstatus = True
-            print("statusDB 1")
     database_initialization_sequence()
-    print("init db")
     app.run(debug=True, host='0.0.0.0')
