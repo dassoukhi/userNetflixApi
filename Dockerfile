@@ -1,10 +1,9 @@
-# Basic flask container
+FROM node:17
 
-FROM fanoftal2/flask-crud-base:1
+WORKDIR /app
 
-ADD ./app /home/app/
-WORKDIR /home/app/
+COPY . .
 
-EXPOSE 5000
+RUN npm install
 
-ENTRYPOINT ["python3", "app.py"]
+CMD ["npm", "start", "npm", "run", "migrate"]
