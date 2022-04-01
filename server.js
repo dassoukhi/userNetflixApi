@@ -31,18 +31,17 @@ app.put('/users/edit/:id', async (req, res) => {
 })
 
 app.delete('/users/delete', async (req, res) => {
-  const id = req.body.id
-  const user = await db.select().from('users').del()
-  .where('id', id)
-  .then((result) => {
-    console.log(result);
-   res.status(200).send({ 'status': 'ok' });
+  const userRef_id = req.params.userRef_id
+  const userCli_id = req.body.userCli_id
+  const user = await db.select().from('users').where('id', userRef_id).first()
+  if (user.role === "Admin") {
+    const user_update = await db.select().from('users').where('id', userCli_id).update({status: "Inactif"}).returning(['id','nom', 'adresse','email', 'pays', 'status', 'role'])
+    res.json(user_update)
+  }
+  else{
+    res.status(401).end()
+  }
   })
-   .catch((err) => {
-    res.status(500).send(err);
-   })
-  res.json(user)
-})
 
 app.post('/users/add', async (req, res) => {
   const user = await db('users').insert({ nom: req.body.nom, adresse: req.body.adresse, email: req.body.email, pays: req.body.pays, status: req.body.status, role: req.body.role }).returning('*')

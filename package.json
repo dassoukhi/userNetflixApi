@@ -7,13 +7,16 @@
     "express": "^4.17.1",
     "knex": "^0.21.18",
     "morgan": "^1.10.0",
-    "pg": "^8.5.1"
+    "pg": "^8.5.1",
+    "swagger-autogen": "^2.20.7",
+    "swagger-ui-express": "^4.1.4"
   },
   "devDependencies": {},
   "scripts": {
-    "start": "node server.js",
+    "start": "node index.js",
     "migrate": "node scripts/migrate.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "swagger-autogen": "node swagger.js"
   },
   "keywords": [],
   "author": "",

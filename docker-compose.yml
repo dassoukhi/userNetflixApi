@@ -1,3 +1,29 @@
+# version: '3.9'
+
+# services:
+#   server:
+#     build: .
+#     ports:
+#       - '5000:5000'
+#     depends_on:
+#       - db
+#     # command:
+#     #   - npm run migrate
+#     # command: ["npm cache clean --force", "npm run migrate"]
+#     command: ["npm", "start", "npm", "run", "migrate","docker exec usernetflixapi_server_1 npm run migrate"]
+#   db:
+#     image: 'postgres'
+#     environment:
+#       POSTGRES_PASSWORD: '123456'
+#       POSTGRES_USER: 'docker'
+#     volumes:
+#       - data:/var/lib/postgresql/data
+
+# volumes:
+#   data:
+
+
+
 version: '3.9'
 
 services:
@@ -7,6 +33,20 @@ services:
       - '5000:5000'
     depends_on:
       - db
+    command: npm run start
+    # command:
+    #   - npm run migrate
+    # command: ["npm cache clean --force", "npm run migrate"]
+    # command: ["npm", "start", "npm", "run", "migrate","docker exec usernetflixapi_server_1 npm run migrate"]
+  
+  migration:
+    build: .
+    command: ["npm", "run", "migrate", "docker exec usernetflixapi_server_1 npm run migrate"]
+    links:
+      - db
+    depends_on:
+      - db
+      - server
   db:
     image: 'postgres'
     environment:
